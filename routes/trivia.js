@@ -5,19 +5,17 @@ const Rsvp = require("../models/Rsvp");
 
 router.post("/save", async (req, res) => {
   try {
-    const { name, invitationCode, score, total } = req.body;
-    if (!name || !invitationCode || score === undefined)
+    const { invitationCode, score, total } = req.body;
+    if (!invitationCode || score === undefined)
       return res.status(400).json({ error: "Faltan datos requeridos" });
 
     const rsvp = await Rsvp.findOne({ invitationCode });
     if (!rsvp) return res.status(404).json({ error: "Código de invitación inválido" });
-    if (rsvp.name.toLowerCase() !== name.trim().toLowerCase())
-      return res.status(400).json({ error: "El nombre no coincide con el código" });
 
     const existing = await TriviaScore.findOne({ invitationCode });
     if (existing) return res.status(409).json({ error: "Este código ya registró un puntaje" });
 
-    const trivia = new TriviaScore({ name: name.trim(), invitationCode, score, total });
+    const trivia = new TriviaScore({ name: rsvp.name, invitationCode, score, total });
     await trivia.save();
     res.status(201).json({ message: "Puntaje guardado", trivia });
   } catch (error) {

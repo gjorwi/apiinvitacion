@@ -31,11 +31,10 @@ router.get("/", async (req, res) => {
 
 router.post("/verify", async (req, res) => {
   try {
-    const { name, invitationCode } = req.body;
+    const { invitationCode } = req.body;
+    if (!invitationCode) return res.status(400).json({ valid: false, error: "Código requerido" });
     const rsvp = await Rsvp.findOne({ invitationCode });
     if (!rsvp) return res.status(404).json({ valid: false, error: "Código inválido" });
-    if (rsvp.name.toLowerCase() !== name.trim().toLowerCase())
-      return res.status(400).json({ valid: false, error: "El nombre no coincide con el código" });
 
     const count = await GalleryImage.countDocuments({ invitationCode });
     const remaining = Math.max(0, 4 - count);
@@ -47,15 +46,11 @@ router.post("/verify", async (req, res) => {
 
 router.post("/upload", upload.single("image"), async (req, res) => {
   try {
-    const { label, guestName, invitationCode } = req.body;
-
-    if (!guestName || !invitationCode)
-      return res.status(400).json({ error: "Nombre y código requeridos" });
+    const { label, invitationCode } = req.body;
+    if (!invitationCode) return res.status(400).json({ error: "Código requerido" });
 
     const rsvp = await Rsvp.findOne({ invitationCode });
     if (!rsvp) return res.status(404).json({ error: "Código inválido" });
-    if (rsvp.name.toLowerCase() !== guestName.trim().toLowerCase())
-      return res.status(400).json({ error: "El nombre no coincide con el código" });
 
     const count = await GalleryImage.countDocuments({ invitationCode });
     if (count >= 4) return res.status(400).json({ error: "Límite de 4 fotos por invitada" });
@@ -72,9 +67,9 @@ router.post("/upload", upload.single("image"), async (req, res) => {
     const url = `http://localhost:4000/uploads/${filename}`;
     const image = new GalleryImage({
       url,
-      label: label || "Subida por invitados",
+      label: label || `Subida por ${rsvp.name}`,
       invitationCode,
-      guestName: guestName.trim(),
+      guestName: rsvp.name,
       approved: false,
     });
     await image.save();

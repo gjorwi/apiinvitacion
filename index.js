@@ -5,6 +5,7 @@ require("dotenv").config();
 
 const rsvpRoutes = require("./routes/rsvp");
 const galleryRoutes = require("./routes/gallery");
+const triviaRoutes = require("./routes/trivia");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -20,6 +21,7 @@ mongoose
 
 app.use("/api/rsvp", rsvpRoutes);
 app.use("/api/gallery", galleryRoutes);
+app.use("/api/trivia", triviaRoutes);
 
 app.get("/", (_req, res) => {
   res.json({ message: "API de invitación - Susana's Spa Celebration" });
